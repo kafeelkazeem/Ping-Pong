@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title>ping-pong</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" />
+   <style>
+     body{
+       background-color: #000;
+       overflow: hidden;
+     }
+     #container{
+       width: 325px;
+       border: 1px solid grey;
+       display: block;
+       margin: 0px auto;
+     }
+     #canvas{
+       border: 1px solid silver;
+     }
+     #btn{
+       display: flex;
+       flex-direction: row;
+       justify-content: space-around;
+       width: 100%;
+       height: 100px;
+     }
+     .btn1{
+       width: 18%;
+       height: 60%;
+       margin: 15px 0px 40px;
+       outline: none;
+       background-color: #000;
+       border: 2px ridge grey;
+     }
+     #left{
+       border-radius: 50% 0% 0% 50%;
+     }
+     #right{
+       border-radius: 0% 50% 50% 0%;
+     }
+     .btn1:active{
+       filter: brightness(0.6);
+     }
+     #pause{
+       width: 65px;
+       height: 65px;
+       margin-top: 15px;
+       border-radius: 50%;
+       outline: none;
+       background-color: #000;
+       border: 1px solid silver;
+     }
+     i{
+       color: silver;
+     }
+   </style>
+</head>
+<body>
+  <div id="container">
+    <canvas id="canvas"></canvas>
+    <div id="btn">
+      <button id="left" class="btn1"><i class="fa fa-angle-left fa-2x"></i></button>
+      <button id="pause" onclick=Pause()><i id="P" class="fa fa-play fa-3x"></i></button>
+      <button id="right" class="btn1"><i class="fa fa-angle-right fa-2x"></i></button>
+    </div>
+    <div id="demo"></div>
+  </div>
+  <script>
+    var left = document.getElementById("left")
+    var right = document.getElementById("right")
+    var cont = document.getElementById("container")
+    var c = document.getElementById("canvas")
+    ctx = c.getContext("2d")
+    c.width = 325
+    c.height = 490
+    
+    var height = 15
+    var width = 80
+    var Ry = (c.height-(height+5))
+    var Rx = ((c.width/2)-(width/2))
+    var Rdx = 0
+    var rectSpeed = 8
+    var comLevel = 0.088
+    
+    var Cx = (c.width/2)
+    var Cy = (c.height/2)
+    var r = 12
+    var ballSpeed = 3//2.5
+    var dx = 0
+    var dy = 5*ballSpeed
+    
+    var player1 = 0 
+    var com = 0
+    
+    var pause = document.getElementById("P")
+    var click = false
+    var run = true
+    
+    const box = document.createElement("div");
+    box.style.display = "none"
+    demo.appendChild(box);
+    
+   /*  window.addEventListener("touchmove", e=>{
+       [...e.changedTouches].forEach(touch=>{
+         Rdx = touch.pageX
+       //  = touch.pageY+"px"
+       })
+     })*/
+    
+    function moveRight(){
+      if(click==true){
+        if((rect.x+rect.width)>c.width){
+          Rdx=0
+        }else{
+          Rdx=rectSpeed
+        }
+      }
+    }
+    function rightTouch(){
+      right.addEventListener("touchstart",moveRight)
+      right.addEventListener("touchend", function(){
+          Rdx=0
+      })
+      right.addEventListener("mousedown", moveRight)
+      right.addEventListener("mouseup", function(){
+          Rdx=0
+      })
+    }
+    function moveLeft(){
+      if(click==true){
+        if(rect.x<0){
+          Rdx=0
+        }else{
+          Rdx=-rectSpeed
+        }
+      }
+    }
+    function leftTouch(){
+      left.addEventListener("touchstart", moveLeft)
+      left.addEventListener("touchend", function(){
+          Rdx=0
+      })
+      left.addEventListener("mousedown", moveLeft)
+      left.addEventListener("mouseup", function(){
+          Rdx=0
+      })
+    }
+    
+   /* function ArrowDown(){
+      left.onkeydown = checkKey;
+      right.onkeydown = checkKey;
+      function checkKey(e) {
+        e = e || window.event;
+        if (e.keyCode == '37') {
+         moveLeft()
+        }
+        else if (e.keyCode == '39') {
+         moveRight()
+        }
+      }
+    }
+    
+    function ArrowUp(){
+      left.onkeyup = checkKey;
+      right.onkeyup = checkKey;
+      function checkKey(e) {
+        e = e || window.event;
+        if (e.keyCode == '37') {
+         Rdx = 0
+        }
+        else if (e.keyCode == '39') {
+         Rdx = 0
+        }
+      }
+    }*/
+    
+    function Circle(){
+      this.r = r 
+      this.x = Cx 
+      this.y = Cy 
+      this.dx = 0
+      this.dy = dy
+      this.top = 0 
+      this.left = 0 
+      this.right = 0 
+      this.bottom = 0
+      this.draw = function(){
+        ctx.beginPath()
+        ctx.arc(this.x,this.y,this.r,0,Math.PI*2)
+        ctx.fillStyle= "silver"
+        ctx.fill()
+        ctx.strokeStyle = "grey"
+        ctx.stroke()
+      }
+      this.update = function(){
+        if(click==true){
+          this.x+=this.dx
+          this.y+=this.dy
+        }
+        this.top = this.y - this.r 
+        this.left = this.x - this.r
+        this.right = this.x + this.r
+        this.bottom = this.y + this.r
+        if(this.top<0){
+          rect2.x = Rx
+        }
+        if(this.bottom>c.height){
+          rect.x += 0
+        }
+        if(this.bottom+30<0){
+          player1++
+          window.navigator.vibrate(70)
+          this.x = c.width/2
+          this.y = c.height/2
+          this.dx = 0
+          this.dy = -this.dy
+        }
+        if(this.x+this.r+this.dx>c.width || this.x-this.r+this.dx<0){
+            this.dx=-this.dx
+        }
+       if(this.top-30>c.height){
+          com++
+          this.x = c.width/2
+          this.y = c.height/2
+          this.dy = -this.dy
+          this.dx = 0
+          window.navigator.vibrate(70)
+        }
+        if(collission()){
+          if(leftColission()){
+            this.dy = -this.dy
+            this.dx = -(Math.PI/2)*ballSpeed
+          /* }else if(leftSideCol()){
+             this.dy = -this.dy
+             this.dx = -(Math.PI/2)*ballSpeed*/
+          }else if(rightColission()){
+             this.dx = (Math.PI/2)*ballSpeed
+             this.dy = -this.dy
+         /* }else if(rightSideCol()){
+            this.dx = (Math.PI/2)*ballSpeed
+            this.dy = -this.dy*/
+          }else if((rect.x+rect.width/2)==this.x){
+            this.dx = (Math.PI/2)*ballSpeed
+            this.dy = -this.dy
+          }else{
+            this.dy = -this.dy
+          }
+        }
+        if(collission2()){
+          if(leftColission2()){
+            this.dy = -this.dy
+            this.dx = -(Math.PI/2)*ballSpeed
+          }else if(rightColission2()){
+             this.dx = (Math.PI/2)*ballSpeed
+             this.dy = -this.dy
+          }else if((rect2.x+rect2.width/2)==this.x){
+            this.dx = (Math.PI/2)*ballSpeed
+            this.dy = -this.dy
+          }else{
+            this.dy = -this.dy
+          }
+        }
+      }
+    }
+    
+    function Rect(){
+      this.height = height
+      this.width = width
+      this.y = Ry
+      this.x = Rx
+      this.top = 0 
+      this.left = 0 
+      this.right = 0 
+      this.bottom = 0
+      this.draw = function(){
+        ctx.beginPath()
+        ctx.rect(this.x, this.y, this.width, this.height)
+        ctx.fillStyle = "silver"
+        ctx.strokeStyle = "#fff"
+        ctx.fill()
+        ctx.stroke()
+        ctx.closePath()
+      }
+      this.update = function(){
+        this.x += Rdx
+        this.top = this.y 
+        this.left = this.x 
+        this.right = this.x + this.width 
+        this.bottom = this.y + this.height
+        if(this.left<0 || (this.right)>c.width){
+            Rdx=0
+         }
+        rightTouch()
+        leftTouch()
+       // ArrowUp()
+      //  ArrowDown()
+      }
+    }
+    
+    function Rect2(){
+      this.height = height
+      this.width = width
+      this.y = 7
+      this.x = Rx
+      this.dx = 0
+      this.top = 0 
+      this.left = 0 
+      this.right = 0 
+      this.bottom = 0
+      this.draw = function(){
+        ctx.beginPath()
+        ctx.rect(this.x, this.y, this.width, this.height)
+        ctx.fillStyle = "silver"
+        ctx.strokeStyle = "#fff"
+        ctx.fill()
+        ctx.stroke()
+        ctx.closePath()
+      }
+      this.update = function(){
+        if(click==true){
+          if(this.x<0){
+            this.x += 2
+          }else if(this.right>c.width){
+            this.x -= 2
+          }else{
+            this.x += (circle.x-(this.x+(this.width/2)))*comLevel
+          }
+        }
+        this.top = this.y 
+        this.left = this.x 
+        this.right = this.x + this.width 
+        this.bottom = this.y + this.height
+      }
+    }
+    
+    function Pause(){
+      if(run==true){
+        if(click==true){
+          pause.setAttribute("class", "fa fa-play fa-3x")
+          click = false
+        }else{
+          pause.setAttribute("class", "fa fa-pause fa-3x")
+          click = true
+        }
+      }
+    }
+    
+    function gameOver(){
+      var text
+      if(player1==7){
+          text = "You Win!!!"
+      }else if(com==7){
+          text = "You Loose!!!"
+      }
+      if(com==7 || player1==7){
+        createElement(document.getElementById("demo"), text)
+        click = false
+        run = false
+      }
+    }
+    
+    var rect = new Rect()
+    var rect2 = new Rect2()
+    var circle = new Circle()
+    
+    function leftColission(){
+     let leftCol = rect.x + 30
+      if(circle.right<=leftCol){
+        return true
+      }
+    }
+    function leftColission2(){
+      let leftCol2 = rect2.x + 30
+      if(circle.right<=leftCol2){
+        return true
+      }
+    }
+    function rightColission(){
+      let rightCol = (rect.x+rect.width)-30
+      if(circle.left>=rightCol){
+        return true
+      }
+    }
+    function rightColission2(){
+      let rightCol2 = (rect2.x+rect2.width)-30
+      if(circle.left>=rightCol2){
+        return true
+      }
+    }
+    function leftSideCol(){
+      if(circle.right+circle.dx>rect.left&&circle.left<rect.left){
+        return true
+      }
+    }
+    function rightSideCol(){
+      if(circle.left+circle.dx<rect.right&&circle.right>rect.left){
+        return true
+      }
+    }
+    
+    function collission(){
+      if((circle.bottom+circle.dy>(rect.top))&&(circle.right>rect.left)&&(circle.left<rect.right)){
+        return true
+      }else if((circle.right+circle.dx==rect.left)||(circle.left+circle.dx==rect.right)){
+        return true
+      }
+    }
+    function collission2(){
+      if((circle.top+circle.dy<(rect2.bottom))&&(circle.right>rect2.left)&&(circle.left<rect2.right)){
+        return true
+      }else if((circle.right+circle.dx==rect2.left)||(circle.left+circle.dx==rect2.right)){
+        return true
+      }
+    }
+    
+    function gameCourt(){
+      ctx.beginPath()
+      ctx.moveTo(0, c.height/2)
+      ctx.lineTo(c.width, c.height/2)
+      ctx.strokeStyle = "#fff"
+      ctx.stroke()
+      ctx.closePath()
+      
+      ctx.beginPath()
+      ctx.arc(c.width/2,c.height/2,55,0,Math.PI*2)
+      ctx.fillStyle= "rgba(0,0,0,0)"
+      ctx.fill()
+      ctx.strokeStyle = "silver"
+      ctx.stroke()
+      ctx.closePath()
+      
+      ctx.beginPath()
+      ctx.font = "43px Arial"
+      ctx.strokeText(com, c.width-34,(c.width/2)+50)
+      ctx.strokeStyle = "silver"
+      ctx.closePath()
+      
+      ctx.beginPath()
+      ctx.font = "43px Arial"
+      ctx.strokeText(player1, c.width-34,(c.width/2)+145)
+      ctx.strokeStyle = "silver"
+      ctx.closePath()
+    }
+    
+    function retry(){
+      box.style.display = "none"
+      player1 = 0
+      com = 0
+      circle.x = Cx 
+      circle.y = Cy
+      circle.dx = 0
+      rect.x = Rx 
+      rect2.x = Rx 
+      click = true
+      run = true
+    }
+    
+    function createElement(k, t){
+       const h = 130
+       const i =(((60/100)*c.height)-(h/2))
+       box.style.display = "block"
+       box.innerHTML= t
+       box.style.paddingTop = "5%"
+       box.style.color = "silver"
+       box.style.fontSize = "30px"
+       box.style.textAlign = "center"
+       box.style.position = "absolute"
+       box.style.width = "235px"
+       box.style.height = h+"px"
+       box.style.backgroundColor = "rgba(0,0,0,0.5"
+       box.style.left = 0
+       box.style.top = i+"px"
+       box.style.down = 0
+       box.style.right = 0
+       box.style.margin = "auto"
+       box.style.border = "1px solid silver"
+       box.style.borderRadius = "20px"
+       const btn = document.createElement("button")
+       btn.style.height = "30%"
+       btn.style.width = "50%"
+       btn.innerHTML = "Continue"
+       btn.style.position = "absolute"
+       btn.style.left = 0
+       btn.style.color = "silver"
+       btn.style.top = 55+"%"
+       btn.style.down = 0
+       btn.style.right = 0
+       btn.style.margin = "auto"
+       btn.style.backgroundColor = "rgba(0,0,0,0.4)"
+       btn.style.outline = "none"
+       btn.style.fontSize = "20px"
+       btn.style.borderRadius = "10px"
+       btn.style.border = "1px groove silver"
+       btn.addEventListener("click", retry)
+       box.appendChild(btn)
+     }
+    
+    var then = Date.now()
+    var now;
+    var fps =50//
+    function animate(){
+      now = Date.now()
+      var difference = now - then
+      if(difference > 1000/fps){
+        let h = 590
+        let center = (window.innerHeight/2)-(h/2)
+        cont.style=`margin-top: ${center}px; height: ${h}px;`
+        ctx.clearRect(0,0,c.width,c.height)
+        gameCourt()
+        rect.draw()
+        rect.update()
+        rect2.draw()
+        rect2.update()
+        circle.draw()
+        circle.update()
+        collission()
+        leftColission()
+        rightColission()
+        leftSideCol()
+        rightSideCol()
+        collission2()
+        leftColission2()
+        rightColission2()
+        gameOver()
+        then = now
+      }
+      window.requestAnimationFrame(animate)
+    }
+    animate()
+  </script>
+</body>
+</html>
